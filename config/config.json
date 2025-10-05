@@ -1,0 +1,169 @@
+{
+  "paths": {
+    "cache_dir": "./data/cache",
+    "output_dir": "./data/output",
+    "temp_dir": "./data/temp",
+    "log_dir": "./logs",
+    "dump_dir": "./cache/docking_logs",
+    "receptor_cache_dir": "./cache/receptors"
+  },
+  "database": {
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "peptide_research",
+      "user": "postgres",
+      "password": "password",
+      "pool_size": 5,
+      "max_overflow": 10,
+      "pool_timeout": 30,
+      "pool_recycle": 3600
+    },
+    "neo4j": {
+      "uri": "bolt://localhost:7687",
+      "user": "neo4j",
+      "password": "password",
+      "database": "neo4j",
+      "max_connection_lifetime": 3600,
+      "max_connection_pool_size": 50
+    }
+  },
+  "analysis": {
+    "string": {
+      "confidence_threshold": 0.9,
+      "max_interactions": 100,
+      "species_id": 10090,
+      "species_list": ["Human", "Mouse", "Rat"],
+      "network_type": "functional",
+      "required_score": 400
+    },
+    "docking": {
+      "energy_threshold": -7.0,
+      "exhaustiveness": 8,
+      "max_runs": 3,
+      "box_size": 20,
+      "spacing": 0.375
+    },
+    "conservation": {
+      "conservation_threshold": 0.8,
+      "min_species": 3,
+      "max_species": 10,
+      "alignment_method": "clustalw",
+      "gap_penalty": 10
+    },
+    "secretion": {
+      "signalp_threshold": 0.5,
+      "tmhmm_threshold": 0.5,
+      "hpa_enabled": true,
+      "tissue_specificity": 0.7
+    }
+  },
+  "optimization": {
+    "target_count": 100,
+    "max_length": 50,
+    "min_length": 10,
+    "tm_threshold": 55.0,
+    "cross_species_ratio": 2.0,
+    "stability_threshold": 0.8,
+    "toxicity_threshold": 0.3
+  },
+  "workflow": {
+    "max_parallel_tasks": 4,
+    "timeout": 3600,
+    "retry_attempts": 3,
+    "retry_delay": 5,
+    "checkpoint_interval": 300,
+    "resume_enabled": true
+  },
+  "tools": {
+    "blast": {
+      "command": "blastp",
+      "version": "2.13.0+",
+      "required": true,
+      "timeout": 300,
+      "retries": 3
+    },
+    "clustalw": {
+      "command": "clustalw",
+      "version": "2.1",
+      "required": false,
+      "timeout": 600,
+      "retries": 2
+    },
+    "autodock_tools": {
+      "path": "/opt/autodock_tools",
+      "prepare_receptor4": "prepare_receptor4.py",
+      "prepare_ligand4": "prepare_ligand4.py",
+      "command": "prepare_receptor4.py",
+      "version": "1.5.7",
+      "required": false,
+      "timeout": 300,
+      "retries": 3
+    },
+    "vina": {
+      "command": "vina",
+      "version": "1.2.3",
+      "required": false,
+      "timeout": 1800,
+      "retries": 2
+    },
+    "signalp": {
+      "command": "signalp",
+      "version": "6.0",
+      "required": false,
+      "timeout": 300,
+      "retries": 3
+    },
+    "tmhmm": {
+      "command": "tmhmm",
+      "version": "2.0",
+      "required": false,
+      "timeout": 300,
+      "retries": 3,
+      "path": "/Users/liweixie/bin/tmhmm"
+    }
+  },
+  "network": {
+    "max_retries": 3,
+    "timeout": 30,
+    "backoff_factor": 1,
+    "user_agent": "AI-Drug-Peptide/1.0",
+    "rate_limit": 1.0,
+    "connection_pool_size": 10
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "app.log",
+    "max_size": "10MB",
+    "backup_count": 5,
+    "console_output": true
+  },
+  "reporting": {
+    "formats": ["json", "excel", "pdf", "html"],
+    "include_charts": true,
+    "include_network_graphs": true,
+    "auto_open": false,
+    "template_dir": "./templates",
+    "output_dir": "./reports"
+  },
+  "cache": {
+    "enabled": true,
+    "expiration_hours": 24,
+    "max_size": "1GB",
+    "compression": false,
+    "integrity_check": true
+  },
+  "security": {
+    "encrypt_sensitive_data": false,
+    "log_sensitive_operations": true,
+    "sanitize_outputs": true
+  },
+  "performance": {
+    "memory_limit": "4GB",
+    "cpu_limit": 8,
+    "disk_limit": "10GB",
+    "enable_profiling": false,
+    "profile_output_dir": "./profiles"
+  }
+}
