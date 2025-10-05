@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/your-username/AI-Drug-Peptide)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/xielab2017/AI-Drug-Peptide)
 
 AI驱动的肽类药物开发平台 - 通过多步骤生物信息学分析管道，从蛋白相互作用网络识别潜在受体，进行分子对接预测，评估跨物种保守性，最终生成优化的肽段候选药物。
 
@@ -12,10 +12,10 @@ AI驱动的肽类药物开发平台 - 通过多步骤生物信息学分析管道
 
 ```bash
 # macOS/Linux
-curl -fsSL https://raw.githubusercontent.com/your-username/AI-Drug-Peptide/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/xielab2017/AI-Drug-Peptide/main/install.sh | bash
 
 # Windows (PowerShell)
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/your-username/AI-Drug-Peptide/main/install.ps1" -OutFile "install.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/xielab2017/AI-Drug-Peptide/main/install.ps1" -OutFile "install.ps1"
 .\install.ps1
 ```
 
@@ -23,7 +23,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/your-username/AI-Drug-
 
 #### 1. 克隆仓库
 ```bash
-git clone https://github.com/your-username/AI-Drug-Peptide.git
+git clone https://github.com/xielab2017/AI-Drug-Peptide.git
 cd AI-Drug-Peptide
 ```
 
@@ -238,7 +238,7 @@ grep ERROR logs/app.log
 ### 开发环境设置
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/AI-Drug-Peptide.git
+git clone https://github.com/xielab2017/AI-Drug-Peptide.git
 cd AI-Drug-Peptide
 
 # 安装开发依赖

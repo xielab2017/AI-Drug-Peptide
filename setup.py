@@ -48,12 +48,12 @@ setup(
     description="AI-driven peptide drug development platform",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/AI-Drug-Peptide",
+    url="https://github.com/xielab2017/AI-Drug-Peptide",
     project_urls={
-        "Bug Reports": "https://github.com/your-username/AI-Drug-Peptide/issues",
-        "Source": "https://github.com/your-username/AI-Drug-Peptide",
+        "Bug Reports": "https://github.com/xielab2017/AI-Drug-Peptide/issues",
+        "Source": "https://github.com/xielab2017/AI-Drug-Peptide",
         "Documentation": "https://ai-drug-peptide.readthedocs.io/",
-        "Download": "https://github.com/your-username/AI-Drug-Peptide/releases",
+        "Download": "https://github.com/xielab2017/AI-Drug-Peptide/releases",
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -163,7 +163,7 @@ setup(
     maintainer="AI-Drug Peptide Team",
     maintainer_email="team@ai-drug-peptide.com",
     # 添加更多元数据
-    download_url="https://github.com/your-username/AI-Drug-Peptide/archive/v1.0.0.tar.gz",
+    download_url="https://github.com/xielab2017/AI-Drug-Peptide/archive/v1.0.0.tar.gz",
     # 支持的Python版本
     python_requires=">=3.8,<4.0",
     # 依赖链接
