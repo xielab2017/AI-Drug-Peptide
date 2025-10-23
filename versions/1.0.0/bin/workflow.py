@@ -46,28 +46,17 @@ try:
     from report_generator import ReportGenerator
 except ImportError as e:
     print(f"Warning: Some modules not available: {e}")
-    # 定义占位符类，返回正确的数据结构
+    # 定义占位符类
     class ProteinInputInitializer:
-        def run(self):
-            return {"status": "skipped", "message": "Module not available"}
+        def run(self): return None
     class DataFetcher:
-        def run_all(self):
-            return {"status": "skipped", "message": "Module not available"}
+        def run_all(self): return None
     class SecretionAnalyzer:
-        def run_analysis(self):
-            return {"status": "skipped", "message": "Module not available"}
+        def run_analysis(self): return None
     class PeptideOptimizationPipeline:
-        def optimize_peptides(self):
-            return {
-                "status": "skipped",
-                "message": "Module not available",
-                "optimized_peptides": [],
-                "total_candidates": 0,
-                "final_candidates": 0
-            }
+        def optimize_peptides(self): return None
     class ReportGenerator:
-        def generate_report(self, **kwargs):
-            return {"status": "skipped", "message": "Module not available"}
+        def generate_report(self): return None
 
 # 配置常量
 CONFIG_FILE = "config/config.json"
@@ -527,14 +516,7 @@ def task_secretion_analysis(fetch_result: TaskResult, protein_id: str = None) ->
         protein_name = "UnknownProtein"  # 默认值
         try:
             from sqlalchemy import create_engine, text
-            # 使用环境变量构建数据库连接字符串
-            db_host = os.getenv('POSTGRES_HOST', 'localhost')
-            db_port = os.getenv('POSTGRES_PORT', '5432')
-            db_name = os.getenv('POSTGRES_DB', 'peptide_research')
-            db_user = os.getenv('POSTGRES_USER', 'postgres')
-            db_password = os.getenv('POSTGRES_PASSWORD', 'password')
-            db_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-            engine = create_engine(db_url)
+            engine = create_engine('postgresql://postgres:password@localhost:5432/peptide_research')
             with engine.connect() as conn:
                 if protein_id:
                     # 使用传入的protein_id查询
@@ -746,17 +728,10 @@ def task_visualization_reporting(optimization_result: TaskResult, protein_id: st
         # 从数据库获取实际的蛋白质信息，优先使用传入的protein_id
         protein_name = "UnknownProtein"  # 默认值
         organism = "Unknown"  # 默认值
-
+        
         try:
             from sqlalchemy import create_engine, text
-            # 使用环境变量构建数据库连接字符串
-            db_host = os.getenv('POSTGRES_HOST', 'localhost')
-            db_port = os.getenv('POSTGRES_PORT', '5432')
-            db_name = os.getenv('POSTGRES_DB', 'peptide_research')
-            db_user = os.getenv('POSTGRES_USER', 'postgres')
-            db_password = os.getenv('POSTGRES_PASSWORD', 'password')
-            db_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-            engine = create_engine(db_url)
+            engine = create_engine('postgresql://postgres:password@localhost:5432/peptide_research')
             with engine.connect() as conn:
                 if protein_id:
                     # 使用传入的protein_id查询

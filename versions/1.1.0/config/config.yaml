@@ -1,0 +1,225 @@
+# AI-Drug Peptide - YAML配置文件
+# 用于更复杂的配置结构和环境变量支持
+
+# 路径配置
+paths:
+  cache_dir: "./data/cache"
+  output_dir: "./data/output"
+  temp_dir: "./data/temp"
+  log_dir: "./logs"
+  structures_dir: "./structures"
+  reports_dir: "./reports"
+
+# 数据库配置
+database:
+  postgresql:
+    host: ${POSTGRES_HOST:-localhost}
+    port: ${POSTGRES_PORT:-5432}
+    database: ${POSTGRES_DB:-peptide_research}
+    user: ${POSTGRES_USER:-postgres}
+    password: ${POSTGRES_PASSWORD:-password}
+    pool_size: 5
+    max_overflow: 10
+    pool_timeout: 30
+    pool_recycle: 3600
+    echo: false
+    
+  neo4j:
+    uri: ${NEO4J_URI:-bolt://localhost:7687}
+    user: ${NEO4J_USER:-neo4j}
+    password: ${NEO4J_PASSWORD:-password}
+    database: ${NEO4J_DB:-neo4j}
+    max_connection_lifetime: 3600
+    max_connection_pool_size: 50
+    encrypted: false
+
+# 分析参数配置
+analysis:
+  string:
+    confidence_threshold: 0.9
+    max_interactions: 100
+    species_id: 9606
+    network_type: "functional"
+    required_score: 400
+    literature_support: true
+    experimental_evidence: true
+    
+  docking:
+    energy_threshold: -7.0
+    exhaustiveness: 8
+    max_runs: 3
+    box_size: 20
+    spacing: 0.375
+    num_modes: 9
+    energy_range: 3.0
+    
+  conservation:
+    conservation_threshold: 0.8
+    min_species: 3
+    max_species: 10
+    alignment_method: "clustalw"
+    gap_penalty: 10
+    substitution_matrix: "BLOSUM62"
+    
+  secretion:
+    signalp_threshold: 0.5
+    tmhmm_threshold: 0.5
+    hpa_enabled: true
+    tissue_specificity: 0.7
+    subcellular_localization: true
+
+# 优化参数配置
+optimization:
+  target_count: 100
+  max_length: 50
+  min_length: 10
+  tm_threshold: 55.0
+  cross_species_ratio: 2.0
+  stability_threshold: 0.8
+  toxicity_threshold: 0.3
+  hydrophobicity_range: [0.0, 1.0]
+  molecular_weight_range: [500, 5000]
+
+# 工作流配置
+workflow:
+  max_parallel_tasks: 4
+  timeout: 3600
+  retry_attempts: 3
+  retry_delay: 5
+  checkpoint_interval: 300
+  resume_enabled: true
+  error_handling: "continue"
+  notification_email: null
+
+# 工具配置
+tools:
+  blast:
+    command: "blastp"
+    version: "2.13.0+"
+    required: true
+    timeout: 300
+    retries: 3
+    database_path: "/usr/local/blast/db"
+    
+  clustalw:
+    command: "clustalw"
+    version: "2.1"
+    required: false
+    timeout: 600
+    retries: 2
+    output_format: "fasta"
+    
+  autodock_tools:
+    command: "prepare_receptor4.py"
+    version: "1.5.7"
+    required: false
+    timeout: 300
+    retries: 3
+    mgltools_path: "/usr/local/mgltools"
+    
+  vina:
+    command: "vina"
+    version: "1.2.3"
+    required: false
+    timeout: 1800
+    retries: 2
+    cpu_threads: 4
+    
+  signalp:
+    command: "signalp"
+    version: "6.0"
+    required: false
+    timeout: 300
+    retries: 3
+    organism_type: "euk"
+    
+  tmhmm:
+    command: "tmhmm"
+    version: "2.0"
+    required: false
+    timeout: 300
+    retries: 3
+    model_path: "/usr/local/tmhmm/models"
+    path: "/Users/liweixie/bin/tmhmm"
+
+# 网络配置
+network:
+  max_retries: 3
+  timeout: 30
+  backoff_factor: 1
+  user_agent: "AI-Drug-Peptide/1.0"
+  rate_limit: 1.0
+  connection_pool_size: 10
+  verify_ssl: true
+  proxies: null
+
+# 日志配置
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "app.log"
+  max_size: "10MB"
+  backup_count: 5
+  console_output: true
+  structured_logging: false
+  log_sql_queries: false
+
+# 报告配置
+reporting:
+  formats: ["json", "excel", "pdf", "html"]
+  include_charts: true
+  include_network_graphs: true
+  auto_open: false
+  template_dir: "./templates"
+  output_dir: "./reports"
+  chart_theme: "plotly_white"
+  chart_colors: ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+
+# 缓存配置
+cache:
+  enabled: true
+  expiration_hours: 24
+  max_size: "1GB"
+  compression: false
+  integrity_check: true
+  cleanup_interval: 3600
+  cache_database: true
+  cache_files: true
+
+# 安全配置
+security:
+  encrypt_sensitive_data: false
+  log_sensitive_operations: true
+  sanitize_outputs: true
+  allowed_file_types: [".csv", ".json", ".xlsx", ".pdf", ".html"]
+  max_file_size: "100MB"
+
+# 性能配置
+performance:
+  memory_limit: "4GB"
+  cpu_limit: 8
+  disk_limit: "10GB"
+  enable_profiling: false
+  profile_output_dir: "./profiles"
+  batch_size: 100
+  chunk_size: 1000
+
+# 环境特定配置
+environments:
+  development:
+    logging:
+      level: "DEBUG"
+    database:
+      postgresql:
+        echo: true
+    performance:
+      enable_profiling: true
+      
+  production:
+    logging:
+      level: "WARNING"
+    security:
+      encrypt_sensitive_data: true
+    performance:
+      memory_limit: "8GB"
+      cpu_limit: 16

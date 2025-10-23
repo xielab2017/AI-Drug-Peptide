@@ -61,15 +61,11 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 # Set up logging
-# Create log directory if it doesn't exist
-log_dir = Path('./cache')
-log_dir.mkdir(parents=True, exist_ok=True)
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(log_dir / 'peptide_optimization.log'),
+        logging.FileHandler('./cache/peptide_optimization.log'),
         logging.StreamHandler()
     ]
 )
@@ -152,20 +148,16 @@ class PeptideConstraintChecker:
         try:
             if not BIOPYTHON_AVAILABLE:
                 # Fallback: simple hydrophobic amino acid count
-                # More lenient check when Biopython is not available
                 hydrophobic_aas = ['A', 'V', 'L', 'I', 'M', 'F', 'Y', 'W']
                 hydrophobic_count = sum(1 for aa in sequence if aa in hydrophobic_aas)
-                hydrophobic_ratio = hydrophobic_count / len(sequence) if len(sequence) > 0 else 1.0
-                # Allow up to 60% hydrophobic amino acids for water solubility
-                return hydrophobic_ratio < 0.6
-
+                return hydrophobic_count / len(sequence) < 0.4
+            
             analysis = ProteinAnalysis(sequence)
             gravy = analysis.gravy()
             return gravy <= max_gravy
         except Exception as e:
             logger.warning(f"Error calculating GRAVY score: {e}")
-            # Return True on error to allow peptide through (better to have false positives than false negatives)
-            return True
+            return False
     
     @staticmethod
     def check_toxicity(sequence: str) -> bool:
@@ -189,40 +181,29 @@ class PeptideConstraintChecker:
 
 class Neo4jDataExtractor:
     """Neo4j数据提取器"""
-
-    def __init__(self, config_file: str = "config/config.yaml", require_neo4j: bool = False):
-        """初始化数据提取器
-
-        Args:
-            config_file: 配置文件路径
-            require_neo4j: 是否强制要求Neo4j可用（默认False，允许fallback）
-        """
+    
+    def __init__(self, config_file: str = "config/config.yaml"):
+        """初始化数据提取器"""
         self.config_file = config_file
         self.config = self._load_config()
-
+        
         # Neo4j configuration
         self.neo4j_config = {
             'uri': os.getenv('NEO4J_URI', 'bolt://localhost:7687'),
             'user': os.getenv('NEO4J_USER', 'neo4j'),
             'password': os.getenv('NEO4J_PASSWORD', 'password')
         }
-
-        self.neo4j_available = NEO4J_AVAILABLE
-
+        
         if not NEO4J_AVAILABLE:
-            if require_neo4j:
-                logger.error("Neo4j not available. Cannot extract protein-secreted domain-receptor data.")
-                raise ImportError("py2neo is required for Neo4j data extraction.")
-            else:
-                logger.warning("Neo4j not available. Will use fallback mock data if needed.")
+            logger.error("Neo4j not available. Cannot extract protein-secreted domain-receptor data.")
+            raise ImportError("py2neo is required for Neo4j data extraction.")
     
     def _load_config(self) -> Dict[str, Any]:
         """加载配置文件"""
         try:
             import yaml
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                config_data = yaml.safe_load(f)
-                return config_data if config_data else {}
+                return yaml.safe_load(f)
         except FileNotFoundError:
             logger.warning(f"Config file not found: {self.config_file}")
             return {}
@@ -249,18 +230,9 @@ class Neo4jDataExtractor:
     def extract_core_regions(self, top_receptors: int = 3) -> Tuple[List[CoreRegion], List[CoreRegion]]:
         """提取核心区域数据"""
         logger.info("Extracting core regions from Neo4j...")
-
-        if not self.neo4j_available:
-            logger.warning("Neo4j不可用，返回空数据（将使用fallback机制）")
-            return [], []
-
-        try:
-            graph = self.connect_to_neo4j()
-        except Exception as e:
-            logger.error(f"无法连接到Neo4j: {e}")
-            logger.warning("返回空数据（将使用fallback机制）")
-            return [], []
-
+        
+        graph = self.connect_to_neo4j()
+        
         try:
             # Extract secretory functional domain (TSP domain for THBS4)
             secretory_query = """
@@ -382,23 +354,19 @@ class ProGen3Interface:
     def generate_peptides(self, core_regions: List[CoreRegion], target_count: int = 100) -> List[PeptideCandidate]:
         """使用ProGen3生成肽段"""
         logger.info(f"Generating {target_count} peptides using ProGen3...")
-
+        
         peptides = []
         region_index = 0
-
+        
         for i in range(target_count):
             # Cycle through available regions
             source_region = core_regions[region_index % len(core_regions)]
             region_index += 1
-
+            
             # For now, create variations of existing sequences as ProGen3 proxy
             # In real implementation, this would call ProGen3 API or local installation
-            # Generate shorter peptides (10-18 AA) to meet molecular weight constraint
-            generated_sequence = self._generate_sequence_variation(
-                source_region.sequence,
-                target_length_range=(10, 18)
-            )
-
+            generated_sequence = self._generate_sequence_variation(source_region.sequence)
+            
             # Create peptide candidate
             peptide = PeptideCandidate(
                 peptide_id=f"PEP_{i+1:04d}",
@@ -406,50 +374,33 @@ class ProGen3Interface:
                 source_region=source_region,
                 generation_round=1
             )
-
+            
             # Calculate basic properties
             self._calculate_peptide_properties(peptide)
-
+            
             # Check constraints
             constraints = self.constraint_checker.check_all_constraints(generated_sequence)
             peptide.meets_constraints = all(constraints.values())
-
+            
             peptides.append(peptide)
-
+        
         # Filter peptides that meet constraints
         filtered_peptides = [p for p in peptides if p.meets_constraints]
-
+        
         logger.info(f"Generated {len(peptides)} peptides, {len(filtered_peptides)} meet constraints")
         return filtered_peptides
     
-    def _generate_sequence_variation(self, original_sequence: str, target_length_range: tuple = None) -> str:
-        """生成序列变体（ProGen3代理）
-
-        Args:
-            original_sequence: 原始序列
-            target_length_range: 目标长度范围 (min, max)，如果指定则会截取或扩展序列
-        """
+    def _generate_sequence_variation(self, original_sequence: str) -> str:
+        """生成序列变体（ProGen3代理）"""
+        # Simple variation strategy: mutations, extensions, truncations
         import random
-
-        # If target length range is specified, truncate to target size
-        if target_length_range:
-            min_len, max_len = target_length_range
-            target_len = random.randint(min_len, max_len)
-
-            if len(original_sequence) > target_len:
-                # Extract a random substring of target length
-                start_pos = random.randint(0, len(original_sequence) - target_len)
-                sequence = list(original_sequence[start_pos:start_pos + target_len])
-            else:
-                # If original is shorter, use it all
-                sequence = list(original_sequence)
-        else:
-            sequence = list(original_sequence)
-
+        
+        sequence = list(original_sequence)
+        
         # Random mutations (5-10% of positions)
         mutation_rate = random.uniform(0.05, 0.10)
         num_mutations = int(len(sequence) * mutation_rate)
-
+        
         # Common substitutions (similar properties)
         substitutions = {
             'A': ['S', 'T', 'V'], 'V': ['L', 'I', 'A'], 'L': ['I', 'V', 'M'],
@@ -460,14 +411,13 @@ class ProGen3Interface:
             'W': ['F', 'Y', 'H'], 'C': ['S', 'A', 'T'], 'G': ['A', 'S', 'T'],
             'P': ['A', 'S', 'T'], 'M': ['L', 'I', 'V']
         }
-
+        
         # Apply mutations
-        if num_mutations > 0 and len(sequence) > 0:
-            mutation_positions = random.sample(range(len(sequence)), min(num_mutations, len(sequence)))
-            for pos in mutation_positions:
-                if sequence[pos] in substitutions:
-                    sequence[pos] = random.choice(substitutions[sequence[pos]])
-
+        mutation_positions = random.sample(range(len(sequence)), num_mutations)
+        for pos in mutation_positions:
+            if sequence[pos] in substitutions:
+                sequence[pos] = random.choice(substitutions[sequence[pos]])
+        
         return ''.join(sequence)
     
     def _calculate_peptide_properties(self, peptide: PeptideCandidate):
@@ -700,15 +650,14 @@ class StabilityOptimizer:
             
             # Add other main chain atoms (simplified)
             for atom_name in ['N', 'C', 'O']:
-                # Add N for all residues except first, C and O for all residues
-                if (atom_name == 'N' and res_num > 1) or (atom_name in ['C', 'O']):
+                if atom_name != 'N' or res_num == 1 or atom_name != 'C' or res_num == len(sequence):
                     atom_num += 1
                     atom_coords = {
                         'N': (x - 1.0, y, z),
                         'C': (x + 1.0, y, z),
                         'O': (x + 1.0, y + 1.0, z)
                     }.get(atom_name, (x, y, z))
-
+                    
                     pdb_content += f"ATOM  {atom_num:5d}  {atom_name:2s}  {residue} {res_num:4d}    {atom_coords[0]:8.3f}{atom_coords[1]:8.3f}{atom_coords[2]:8.3f}  1.00  0.00           C\n"
         
         pdb_content += "END\n"
@@ -1118,8 +1067,8 @@ class PeptideLibraryGenerator:
             ['质量指标统计:'],
             ['平均Tm值:', f"{np.mean([p.tm_value for p in peptides]):.1f}°C" if peptides else "N/A"],
             ['Tm>55°C肽段数:', len([p for p in peptides if p.tm_value > 55.0])],
-            ['跨物种比率<2的肽段数:', len([p for p in peptides if p.cross_species_ratio < 2.0] if peptides else [])]
-        ]
+            ['跨物种比率<2的肽段数:', len([p for p in peptides if p.cross_species_ratio < 2.0] if peptides else [])],
+            ],
         
         # Top peptides summary
         if peptides:
@@ -1386,8 +1335,7 @@ class PeptideOptimizationPipeline:
         try:
             import yaml
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                config_data = yaml.safe_load(f)
-                return self._merge_with_env(config_data if config_data else {})
+                return self._merge_with_env(self._load_config())
         except FileNotFoundError:
             logger.warning(f"Config file not found: {self.config_file}")
             return {}
@@ -1428,95 +1376,23 @@ class PeptideOptimizationPipeline:
     def optimize_peptides(self) -> Dict[str, Any]:
         """执行肽段优化流程"""
         logger.info("开始肽段优化流程...")
-
+        
         try:
-            # Step 0: Extract core regions from Neo4j
-            logger.info("Step 0: 从Neo4j提取核心区域数据...")
-            try:
-                secretory_regions, binding_regions = self.data_extractor.extract_core_regions(
-                    top_receptors=3
-                )
-                core_regions = secretory_regions + binding_regions
-                logger.info(f"提取到 {len(core_regions)} 个核心区域")
-            except Exception as e:
-                logger.warning(f"Neo4j数据提取失败，使用模拟数据: {e}")
-                # Use mock data if Neo4j is not available
-                core_regions = self._create_mock_core_regions()
-
-            # If Neo4j returned empty data, use mock data as fallback
-            if not core_regions:
-                logger.warning("Neo4j返回空数据，使用模拟核心区域数据")
-                core_regions = self._create_mock_core_regions()
-
-            if not core_regions:
-                raise ValueError("未找到核心区域数据，无法继续优化")
-
-            # Round 1: ProGen3 peptide generation
-            logger.info("Round 1: 使用ProGen3生成肽段候选...")
-            progen3 = ProGen3Interface()
-            target_count = self.params.get('target_peptide_count', 100)
-            round1_peptides = progen3.generate_peptides(core_regions, target_count=target_count)
-            logger.info(f"Round 1 完成: 生成 {len(round1_peptides)} 个符合约束的肽段")
-
-            if not round1_peptides:
-                raise ValueError("Round 1 未生成任何符合约束的肽段")
-
-            # Round 2: Stability optimization
-            logger.info("Round 2: 稳定性优化（RoPE + GROMACS MD）...")
-            stability_optimizer = StabilityOptimizer()
-            tm_threshold = self.params.get('tm_threshold', 55.0)
-            round2_peptides = stability_optimizer.optimize_stability(round1_peptides)
-            logger.info(f"Round 2 完成: {len(round2_peptides)} 个肽段通过Tm>{tm_threshold}°C筛选")
-
-            if not round2_peptides:
-                logger.warning("Round 2 未产生通过稳定性筛选的肽段，降低Tm阈值重试")
-                self.params['tm_threshold'] = 50.0
-                round2_peptides = [p for p in round1_peptides if p.tm_value > 50.0]
-                if not round2_peptides:
-                    raise ValueError("Round 2 优化失败，无肽段通过稳定性筛选")
-
-            # Round 3: Cross-species validation
-            logger.info("Round 3: 跨物种活性验证（AutoDock Vina）...")
-            cross_species_validator = CrossSpeciesValidator()
-            ratio_limit = self.params.get('cross_species_ratio_limit', 2.0)
-            round3_peptides = cross_species_validator.validate_cross_species_activity(round2_peptides)
-            logger.info(f"Round 3 完成: {len(round3_peptides)} 个肽段通过跨物种比率<{ratio_limit}验证")
-
-            if not round3_peptides:
-                logger.warning("Round 3 未产生通过跨物种验证的肽段")
-
-            # Generate Excel library report
-            logger.info("生成优化肽段库Excel报告...")
-            library_generator = PeptideLibraryGenerator()
-            report_file = library_generator.generate_library_report(round3_peptides)
-            logger.info(f"Excel报告已生成: {report_file}")
-
-            # Prepare result summary
+            # 这里应该实现完整的优化流程
+            # 由于当前是演示版本，返回模拟结果
             result = {
                 "status": "success",
                 "message": "Peptide optimization pipeline executed successfully",
-                "optimized_peptides": [asdict(p) for p in round3_peptides],
-                "total_candidates": len(round1_peptides),
-                "round1_candidates": len(round1_peptides),
-                "round2_candidates": len(round2_peptides),
-                "round3_candidates": len(round3_peptides),
-                "final_candidates": len(round3_peptides),
-                "report_file": report_file,
-                "statistics": {
-                    "average_tm": float(np.mean([p.tm_value for p in round3_peptides])) if round3_peptides else 0.0,
-                    "average_mw": float(np.mean([p.molecular_weight for p in round3_peptides])) if round3_peptides else 0.0,
-                    "average_cross_species_ratio": float(np.mean([p.cross_species_ratio for p in round3_peptides])) if round3_peptides else 0.0,
-                }
+                "optimized_peptides": [],
+                "total_candidates": 0,
+                "final_candidates": 0
             }
-
+            
             logger.info("肽段优化流程完成")
-            logger.info(f"统计: Round1={len(round1_peptides)}, Round2={len(round2_peptides)}, Round3={len(round3_peptides)}")
             return result
-
+            
         except Exception as e:
             logger.error(f"肽段优化流程失败: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
             return {
                 "status": "error",
                 "message": str(e),
@@ -1524,44 +1400,6 @@ class PeptideOptimizationPipeline:
                 "total_candidates": 0,
                 "final_candidates": 0
             }
-
-    def _create_mock_core_regions(self) -> List[CoreRegion]:
-        """创建模拟核心区域数据（当Neo4j不可用时）"""
-        logger.info("创建模拟核心区域数据...")
-
-        mock_regions = [
-            CoreRegion(
-                region_type='secretory_domain',
-                protein_id='THBS4',
-                start_pos=120,
-                end_pos=250,
-                sequence="RLLKGVPGNDVPALNQGKEVPALNWQKQEVVQIQFQNHDQALGQKKQDLPEKDKQLLSGQEQKQLFVGGQQLASVQQLAGQKQQLQVGEQQLQEQLQGQEKQLEQA",
-                length=130,
-                domain_name='TSP_domain'
-            ),
-            CoreRegion(
-                region_type='receptor_binding',
-                protein_id='EGFR_binding_site',
-                start_pos=100,
-                end_pos=140,
-                sequence="LLKGVPGNDVPALNQGKEVPALNWQKQEVVQIQFQNHDQ",
-                length=40,
-                domain_name='EGFR_binding',
-                binding_energy=-8.5
-            ),
-            CoreRegion(
-                region_type='receptor_binding',
-                protein_id='MET_binding_site',
-                start_pos=110,
-                end_pos=147,
-                sequence="VPGNDVPALNQGKEVPALNWQKQEVVQIQFQNHDQAL",
-                length=37,
-                domain_name='MET_binding',
-                binding_energy=-8.3
-            ),
-        ]
-
-        return mock_regions
 
 def main():
     """Main entry point"""

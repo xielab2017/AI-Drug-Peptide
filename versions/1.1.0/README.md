@@ -1,27 +1,10 @@
-# AI-Drug Peptide V1.1.0
+# AI-Drug Peptide V1.0
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/xielab2017/AI-Drug-Peptide)
-[![Version](https://img.shields.io/badge/version-1.1.0-brightgreen.svg)](versions/1.1.0/VERSION.md)
-[![Tests](https://img.shields.io/badge/tests-7%2F7%20passing-success.svg)](test_peptide_screening_fixes.py)
 
 AI驱动的肽类药物开发平台 - 通过多步骤生物信息学分析管道，从蛋白相互作用网络识别潜在受体，进行分子对接预测，评估跨物种保守性，最终生成优化的肽段候选药物。
-
-## 📌 版本说明
-
-**当前版本**: v1.1.0 (2025-10-23) - Bug修复版本 ✅
-
-- 🎉 修复了v1.0.0的所有关键Bug
-- ✅ 完整实现3轮肽段优化流程
-- ✅ 所有测试通过（7/7, 100%）
-- 📚 查看 [版本详情](versions/1.1.0/VERSION.md) | [修复报告](PEPTIDE_SCREENING_FIXES.md) | [版本对比](versions/README.md)
-
-### 版本历史
-- **v1.1.0** (2025-10-23) - Bug修复，完整实现肽段优化 [当前版本] ⭐
-- **v1.0.0** (2025-10-05) - 初始发布版本 [已知问题]
-
-> 💡 **提示**: 如需查看历史版本，请访问 [`versions/`](versions/) 目录
 
 ## 🚀 快速安装
 
