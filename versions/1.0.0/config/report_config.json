@@ -1,0 +1,210 @@
+{
+  "report_formats": {
+    "json": {
+      "enabled": true,
+      "pretty_print": true,
+      "include_metadata": true,
+      "compression": false
+    },
+    "excel": {
+      "enabled": true,
+      "include_charts": true,
+      "include_summary": true,
+      "include_detailed_results": true,
+      "include_charts_sheet": true,
+      "auto_adjust_columns": true,
+      "freeze_panes": true
+    },
+    "pdf": {
+      "enabled": true,
+      "include_charts": true,
+      "include_network_graphs": true,
+      "page_size": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 1.0,
+        "bottom": 1.0,
+        "left": 1.0,
+        "right": 1.0
+      }
+    },
+    "html": {
+      "enabled": true,
+      "include_interactive_charts": true,
+      "include_network_graphs": true,
+      "responsive": true,
+      "theme": "plotly_white",
+      "auto_open": false
+    }
+  },
+  "chart_settings": {
+    "default_colors": [
+      "#1f77b4",
+      "#ff7f0e", 
+      "#2ca02c",
+      "#d62728",
+      "#9467bd",
+      "#8c564b",
+      "#e377c2",
+      "#7f7f7f",
+      "#bcbd22",
+      "#17becf"
+    ],
+    "chart_sizes": {
+      "small": {"width": 400, "height": 300},
+      "medium": {"width": 600, "height": 400},
+      "large": {"width": 800, "height": 600}
+    },
+    "font_settings": {
+      "family": "Arial",
+      "size": 12,
+      "color": "#333333"
+    }
+  },
+  "excel_styling": {
+    "header_style": {
+      "font": {
+        "bold": true,
+        "size": 12,
+        "color": "FFFFFF"
+      },
+      "fill": {
+        "start_color": "366092",
+        "end_color": "366092",
+        "fill_type": "solid"
+      },
+      "alignment": {
+        "horizontal": "center",
+        "vertical": "center"
+      },
+      "border": {
+        "left": "thin",
+        "right": "thin",
+        "top": "thin",
+        "bottom": "thin"
+      }
+    },
+    "data_style": {
+      "font": {
+        "size": 10
+      },
+      "alignment": {
+        "horizontal": "left",
+        "vertical": "center"
+      },
+      "border": {
+        "left": "thin",
+        "right": "thin",
+        "top": "thin",
+        "bottom": "thin"
+      }
+    },
+    "number_format": {
+      "decimal_places": 3,
+      "percentage": true,
+      "scientific": false
+    }
+  },
+  "pdf_settings": {
+    "page_layout": {
+      "margins": {
+        "top": 1.0,
+        "bottom": 1.0,
+        "left": 1.0,
+        "right": 1.0
+      },
+      "header_height": 0.5,
+      "footer_height": 0.5
+    },
+    "font_settings": {
+      "title_font": {"family": "Arial", "size": 16, "weight": "bold"},
+      "heading_font": {"family": "Arial", "size": 14, "weight": "bold"},
+      "body_font": {"family": "Arial", "size": 10, "weight": "normal"}
+    },
+    "chart_settings": {
+      "dpi": 300,
+      "bbox_inches": "tight",
+      "facecolor": "white",
+      "edgecolor": "black"
+    }
+  },
+  "html_settings": {
+    "template": {
+      "title": "AI-Drug Peptide Analysis Report",
+      "description": "Comprehensive analysis report for peptide drug development",
+      "author": "AI-Drug Peptide Team",
+      "version": "1.0.0"
+    },
+    "layout": {
+      "responsive": true,
+      "bootstrap_version": "5.0",
+      "custom_css": null,
+      "custom_js": null
+    },
+    "interactive_features": {
+      "zoom": true,
+      "pan": true,
+      "hover": true,
+      "tooltips": true,
+      "legend": true
+    }
+  },
+  "content_sections": {
+    "summary": {
+      "enabled": true,
+      "include_protein_info": true,
+      "include_analysis_steps": true,
+      "include_key_metrics": true,
+      "include_recommendations": true
+    },
+    "string_analysis": {
+      "enabled": true,
+      "include_network_graph": true,
+      "include_interaction_table": true,
+      "include_confidence_distribution": true,
+      "include_literature_support": true
+    },
+    "docking_analysis": {
+      "enabled": true,
+      "include_binding_energy_chart": true,
+      "include_receptor_ranking": true,
+      "include_success_rate": true,
+      "include_conformation_analysis": true
+    },
+    "conservation_analysis": {
+      "enabled": true,
+      "include_conservation_heatmap": true,
+      "include_species_comparison": true,
+      "include_conservation_scores": true,
+      "include_alignment_summary": true
+    },
+    "secretion_analysis": {
+      "enabled": true,
+      "include_signal_peptide_prediction": true,
+      "include_transmembrane_analysis": true,
+      "include_secretion_pathway": true,
+      "include_tissue_expression": true
+    },
+    "optimization_results": {
+      "enabled": true,
+      "include_peptide_library": true,
+      "include_optimization_metrics": true,
+      "include_stability_analysis": true,
+      "include_cross_species_validation": true
+    }
+  },
+  "output_settings": {
+    "filename_template": "analysis_report_{protein_id}_{timestamp}",
+    "timestamp_format": "%Y%m%d_%H%M%S",
+    "include_version": true,
+    "include_metadata": true,
+    "compress_output": false
+  },
+  "quality_settings": {
+    "min_chart_resolution": 300,
+    "max_file_size": "100MB",
+    "validate_data": true,
+    "sanitize_output": true,
+    "include_error_handling": true
+  }
+}
