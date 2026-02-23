@@ -1,0 +1,9 @@
+torch>=2.0.0
+biopython>=1.81
+rdkit>=2023.03.1
+fair-esm>=2.0.0
+transformers>=4.30.0
+flask>=2.3.0
+requests>=2.31.0
+numpy>=1.24.0
+pandas>=2.0.0
